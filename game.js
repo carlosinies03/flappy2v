@@ -151,6 +151,12 @@ class MainScene extends Phaser.Scene {
         this.immortalText = null;
         this.pipeCollider = null;
         this.fireballCollider = null;
+
+        // AÑADIDO: Propiedades para la flecha de guía y depuración
+        this.guideArrow = null;
+        this.isFirstWallCleared = false;
+        this.isArrowGuideActive = false;
+        this.debugText = null;
     }
 
     preload() {
@@ -168,6 +174,11 @@ class MainScene extends Phaser.Scene {
     create() {
         const { width, height } = this.cameras.main;
 
+        // AÑADIDO: Reinicializar flags de guía al crear la escena
+        this.isFirstWallCleared = false;
+        this.isArrowGuideActive = false;
+        if (this.guideArrow) this.guideArrow.destroy();
+        
         if (!this.textures.exists('fireball_projectile')) {
             this.add.text(width / 2, height / 2, "ERROR...", { color: '#ff0000' }).setOrigin(0.5);
             return;
@@ -202,8 +213,20 @@ class MainScene extends Phaser.Scene {
         this.scoreText = this.add.text(width / 2, 50, '', { fontSize: '48px', fill: '#fff', stroke: '#000', strokeThickness: 5 }).setOrigin(0.5).setAlpha(0).setDepth(10).setScrollFactor(0);
         
         this.gameOverContainer = this.createGameOverScreen(); this.gameOverContainer.setScrollFactor(0);
-        this.immortalText = this.add.text(10, 10, 'Modo Inmortal: OFF', { fontSize: '16px', fill: '#00ff00', backgroundColor: '#00000080', padding: { x: 5, y: 3 } }).setScrollFactor(0).setDepth(100);
-        this.input.keyboard.on('keydown-I', () => { this.isImmortal = !this.isImmortal; if (this.isImmortal) { this.immortalText.setText('Modo Inmortal: ON').setColor('#ff0000'); this.bird.setAlpha(0.5); this.pipeCollider.active = false; this.fireballCollider.active = false; this.bird.setCollideWorldBounds(false); } else { this.immortalText.setText('Modo Inmortal: OFF').setColor('#00ff00'); this.bird.setAlpha(1.0); this.pipeCollider.active = true; this.fireballCollider.active = true; this.bird.setCollideWorldBounds(true); } });
+        
+        const textStyle = { fontSize: '16px', fill: '#ffffff', backgroundColor: '#00000080', padding: { x: 5, y: 3 } };
+        this.immortalText = this.add.text(10, 10, 'Inmortal: OFF (I)', textStyle).setScrollFactor(0).setDepth(100);
+        this.debugText = this.add.text(10, 30, 'Debug: OFF (D)', textStyle).setScrollFactor(0).setDepth(100);
+
+        this.input.keyboard.on('keydown-I', () => { this.isImmortal = !this.isImmortal; if (this.isImmortal) { this.immortalText.setText('Inmortal: ON (I)').setColor('#ff0000'); this.bird.setAlpha(0.5); this.pipeCollider.active = false; this.fireballCollider.active = false; this.bird.setCollideWorldBounds(false); } else { this.immortalText.setText('Inmortal: OFF (I)').setColor('#ffffff'); this.bird.setAlpha(1.0); this.pipeCollider.active = true; this.fireballCollider.active = true; this.bird.setCollideWorldBounds(true); } });
+
+        // AÑADIDO: Listener para la tecla 'D' para activar/desactivar el debug de físicas
+        this.input.keyboard.on('keydown-D', () => {
+            const newVisibility = !this.physics.world.debugGraphic.visible;
+            this.physics.world.debugGraphic.setVisible(newVisibility);
+            this.physics.world.drawDebug = newVisibility;
+            this.debugText.setText(`Debug: ${newVisibility ? 'ON' : 'OFF'} (D)`).setColor(newVisibility ? '#ff00ff' : '#ffffff');
+        });
 
         this.scale.on('resize', this.resizeAllElements, this);
     }
@@ -224,6 +247,42 @@ class MainScene extends Phaser.Scene {
         if (this.gameOver || !this.gameStarted) return;
         this.background.tilePositionX += 0.5 / 0.75;
         if (this.bird.body.velocity.y < 0) { this.bird.angle = Phaser.Math.Clamp(this.bird.angle - 5, -30, 90); } else if (this.bird.angle < 90) { this.bird.angle += 2.5; }
+        
+        // AÑADIDO: Lógica para actualizar la posición y rotación de la flecha guía
+        if (this.isArrowGuideActive && this.guideArrow) {
+            let closestPipe = null;
+            let minDistance = Infinity;
+
+            // Encontrar la tubería superior más cercana a la derecha del pájaro
+            this.pipes.getChildren().forEach(pipe => {
+                if (pipe.texture.key === 'pipe-cap' && pipe.flipY && pipe.x > this.bird.x) {
+                    const distance = pipe.x - this.bird.x;
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        closestPipe = pipe;
+                    }
+                }
+            });
+
+            if (closestPipe) {
+                // Si la tubería ya está en pantalla, desactivar la guía
+                if (closestPipe.x < this.cameras.main.scrollX + this.cameras.main.width) {
+                    this.isArrowGuideActive = false;
+                    this.guideArrow.destroy();
+                    this.guideArrow = null;
+                } else {
+                    // Calcular el punto medio del hueco de la tubería
+                    const targetX = closestPipe.x;
+                    const targetY = closestPipe.y + (this.currentPipeGap / 2);
+                    
+                    // Posicionar la flecha cerca del pájaro y apuntar al objetivo
+                    this.guideArrow.setPosition(this.bird.x + 40, this.bird.y);
+                    const angle = Phaser.Math.Angle.Between(this.guideArrow.x, this.guideArrow.y, targetX, targetY);
+                    this.guideArrow.setRotation(angle);
+                    this.guideArrow.setVisible(true);
+                }
+            }
+        }
         
         this.fireballs.getChildren().forEach(fireball => { const leftBound = this.cameras.main.scrollX - 100; const rightBound = this.cameras.main.scrollX + this.cameras.main.width + 100; if (fireball.x < leftBound || fireball.x > rightBound) { fireball.destroy(); } });
         const cameraRotation = this.cameras.main.rotation; this.scoreText.rotation = -cameraRotation; this.gameOverContainer.rotation = -cameraRotation;
@@ -292,7 +351,6 @@ class MainScene extends Phaser.Scene {
     startProjectileEvent() {
         this.isProjectileEventActive = true; this.pipeTimer.paused = true; this.projectileEventCount++;
         
-        // CORREGIDO: Detener el seguimiento integrado
         this.cameras.main.stopFollow();
         
         this.tweens.add({ targets: this.cameras.main, zoom: 1, scrollY: 0, duration: 500, ease: 'Sine.easeInOut' });
@@ -354,10 +412,20 @@ class MainScene extends Phaser.Scene {
                     scoreZone.destroy(); this.score += 1; this.scoreText.setText(this.score);
                     this.isWallEventActive = false; this.nextProjectileScore = this.score + 10;
                     
-                    // CORREGIDO: Iniciar el seguimiento integrado de la cámara
                     this.cameras.main.startFollow(this.bird, true, 0.1, 0.1);
 
                     this.tweens.add({ targets: this.cameras.main, zoom: 1.3, duration: 500, ease: 'Sine.easeInOut' });
+
+                    // AÑADIDO: Activar la guía con flecha solo la primera vez
+                    if (!this.isFirstWallCleared) {
+                        this.isFirstWallCleared = true;
+                        this.isArrowGuideActive = true;
+                        // Crear el objeto gráfico para la flecha
+                        this.guideArrow = this.add.graphics({ lineStyle: { width: 2, color: 0x000000 }, fillStyle: { color: 0x00ff00 } });
+                        this.guideArrow.fillTriangle(0, -8, 20, 0, 0, 8);
+                        this.guideArrow.setDepth(200).setVisible(false);
+                    }
+
                     this.time.delayedCall(1500, () => { if (this.gameOver) return; this.pipeTimer.paused = false; this.updateScoreAndDifficulty(); });
                 });
             });
@@ -424,7 +492,11 @@ const config = {
     },
     physics: {
         default: 'arcade',
-        arcade: { gravity: { y: 0 }, debug: false }
+        arcade: { 
+            // MODIFICADO: debug se establece en true para habilitar el motor de dibujo, pero se oculta al inicio.
+            gravity: { y: 0 }, 
+            debug: true 
+        }
     },
     scene: MainScene
 };
