@@ -48,7 +48,6 @@
                     <div class="panel-header user-panel">
                         <div class="user-info">
                             <span class="user-level">0</span>
-                            <!-- MODIFICADO: Contenedor para el nombre de usuario y el campo de edición -->
                             <div class="username-container">
                                 <span id="username-text">Carlossww</span>
                                 <input type="text" id="username-input" class="hidden">
@@ -70,6 +69,32 @@
                         <div class="stat-label">Ganancias de los jugadores</div>
                     </div>
                 </div>
+
+                <!-- AÑADIDO: Panel de Opciones de Depuración -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <label for="debug-mode-toggle">
+                            <i class="fa-solid fa-bug"></i> Opciones de Depuración
+                        </label>
+                        <input type="checkbox" id="debug-mode-toggle">
+                    </div>
+                    <div id="debug-options" class="hidden">
+                        <div class="debug-option-item">
+                            <label for="start-score-input">Puntuación Inicial:</label>
+                            <input type="number" id="start-score-input" value="0" min="0">
+                        </div>
+                        <div class="debug-option-item">
+                            <label for="start-event-select">Saltar al Evento:</label>
+                            <select id="start-event-select">
+                                <option value="none">Ninguno</option>
+                                <option value="projectile">Evento de Proyectiles (Score 10)</option>
+                                <option value="wall">Evento de Muro (Score 30)</option>
+                                <option value="zoom">Vista con Zoom (Post-Muro)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
             <!-- COLUMNA DERECHA -->
@@ -103,7 +128,6 @@
         <!-- El Juego Phaser se creará aquí automáticamente -->
         <div id="phaser-container"></div>
         
-        <!-- AÑADIDO: Botones de pantalla completa -->
         <div class="fullscreen-controls">
             <button id="enter-fullscreen" class="btn"><i class="fa-solid fa-expand"></i></button>
             <button id="exit-fullscreen" class="btn" style="display: none;"><i class="fa-solid fa-compress"></i></button>

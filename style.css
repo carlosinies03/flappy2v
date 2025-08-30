@@ -393,3 +393,45 @@ body::before {
     background-position: -1920px 0;
   }
 }
+
+/* EN style.css, al final del archivo */
+
+/* --- AÑADIDO: Estilos para el Panel de Depuración --- */
+#debug-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    border-top: 1px solid var(--border-color);
+    padding-top: 1rem;
+    margin-top: 0.5rem;
+}
+
+.debug-option-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.debug-option-item label {
+    margin-right: 1rem;
+    font-size: 0.9rem;
+}
+
+#debug-mode-toggle {
+    transform: scale(1.2);
+    cursor: pointer;
+}
+
+#start-score-input, #start-event-select {
+    background-color: #333;
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 4px 8px;
+    width: 60%;
+}
+
+#start-score-input {
+    width: 80px;
+    text-align: center;
+}
