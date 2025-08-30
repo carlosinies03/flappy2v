@@ -167,8 +167,10 @@ class MainScene extends Phaser.Scene {
     }
 
     create() {
+        const { width, height } = this.cameras.main;
+
         if (!this.textures.exists('fireball_projectile')) {
-            this.add.text(this.game.config.width / 2, this.game.config.height / 2, "ERROR...", { color: '#ff0000' }).setOrigin(0.5);
+            this.add.text(width / 2, height / 2, "ERROR...", { color: '#ff0000' }).setOrigin(0.5);
             return;
         }
         this.cameras.main.scrollX = 0; this.cameras.main.scrollY = 0; this.cameras.main.zoom = 1; this.cameras.main.rotation = 0;
@@ -177,7 +179,12 @@ class MainScene extends Phaser.Scene {
         this.currentPipeSpeed = this.INITIAL_PIPE_SPEED; this.currentPipeGap = this.INITIAL_PIPE_GAP;
         this.currentTweenDuration = this.INITIAL_TWEEN_DURATION; this.currentWallAmplitude = this.INITIAL_WALL_AMPLITUDE;
         this.nextWallScore = 30; this.nextProjectileScore = 10;
-        this.background = this.add.tileSprite(this.game.config.width / 2, this.game.config.height / 2, this.game.config.width * 1.5, this.game.config.height * 1.5, 'background').setOrigin(0.5).setScrollFactor(0).setDepth(-1).setTileScale(0.49, 0.49);
+
+        // AHORA: El fondo usa el tamaño de la cámara para ser responsivo
+        this.background = this.add.tileSprite(width / 2, height / 2, width, height, 'background').setOrigin(0.5).setScrollFactor(0).setDepth(-1);
+        this.background.tileScaleX = height / this.textures.get('background').getSourceImage().height;
+        this.background.tileScaleY = this.background.tileScaleX;
+
         this.pipes = this.physics.add.group(); this.fireballs = this.physics.add.group();
         this.bird = this.physics.add.sprite(100, 300, 'bird');
         this.anims.create({ key: 'flap', frames: this.anims.generateFrameNumbers('bird', { start: 0, end: 1 }), frameRate: 10, repeat: -1 });
@@ -185,16 +192,40 @@ class MainScene extends Phaser.Scene {
         this.anims.create({ key: 'puff', frames: this.anims.generateFrameNumbers('death_effect', { start: 0, end: 11 }), frameRate: 24, repeat: 0 });
         this.bird.setFrame(0); this.bird.setDisplaySize(60, 59); this.bird.body.setSize(40, 30);
         this.bird.setCollideWorldBounds(true).body.onWorldBounds = true; this.bird.body.setAllowGravity(false);
-        const getReadyText = this.add.text(this.game.config.width / 2, this.game.config.height / 3, '¡Prepárate!', { fontSize: '48px', fill: '#fff', stroke: '#000', strokeThickness: 5 }).setOrigin(0.5);
+        
+        // AHORA: El texto de inicio se centra dinámicamente
+        const getReadyText = this.add.text(width / 2, height / 3, '¡Prepárate!', { fontSize: '48px', fill: '#fff', stroke: '#000', strokeThickness: 5 }).setOrigin(0.5);
         const birdFloat = this.tweens.add({ targets: this.bird, y: 310, ease: 'Sine.easeInOut', duration: 400, yoyo: true, repeat: -1 });
         this.physics.world.on('worldbounds', (body) => { if (body.gameObject === this.bird) this.hitPipe(); });
         this.pipeCollider = this.physics.add.collider(this.bird, this.pipes, this.hitPipe, null, this);
         this.fireballCollider = this.physics.add.collider(this.bird, this.fireballs, this.hitPipe, null, this);
         this.input.on('pointerdown', () => this.flap(getReadyText, birdFloat)); this.input.keyboard.on('keydown-SPACE', () => this.flap(getReadyText, birdFloat));
-        this.score = 0; this.scoreText = this.add.text(this.game.config.width / 2, 50, '', { fontSize: '48px', fill: '#fff', stroke: '#000', strokeThickness: 5 }).setOrigin(0.5).setAlpha(0).setDepth(10).setScrollFactor(0);
+        this.score = 0; 
+        
+        // AHORA: El texto de puntuación se centra dinámicamente
+        this.scoreText = this.add.text(width / 2, 50, '', { fontSize: '48px', fill: '#fff', stroke: '#000', strokeThickness: 5 }).setOrigin(0.5).setAlpha(0).setDepth(10).setScrollFactor(0);
+        
         this.gameOverContainer = this.createGameOverScreen(); this.gameOverContainer.setScrollFactor(0);
         this.immortalText = this.add.text(10, 10, 'Modo Inmortal: OFF', { fontSize: '16px', fill: '#00ff00', backgroundColor: '#00000080', padding: { x: 5, y: 3 } }).setScrollFactor(0).setDepth(100);
         this.input.keyboard.on('keydown-I', () => { this.isImmortal = !this.isImmortal; if (this.isImmortal) { this.immortalText.setText('Modo Inmortal: ON').setColor('#ff0000'); this.bird.setAlpha(0.5); this.pipeCollider.active = false; this.fireballCollider.active = false; this.bird.setCollideWorldBounds(false); } else { this.immortalText.setText('Modo Inmortal: OFF').setColor('#00ff00'); this.bird.setAlpha(1.0); this.pipeCollider.active = true; this.fireballCollider.active = true; this.bird.setCollideWorldBounds(true); } });
+
+        // AÑADIDO: Escuchador para redimensionar la UI cuando la ventana cambie
+        this.scale.on('resize', this.resizeAllElements, this);
+    }
+
+    // AÑADIDO: Nueva función para manejar el reposicionamiento de elementos
+    resizeAllElements(gameSize) {
+        const { width, height } = gameSize;
+    
+        // Reposicionar y redimensionar fondo
+        this.background.setPosition(width / 2, height / 2);
+        this.background.setSize(width, height);
+        this.background.tileScaleX = height / this.textures.get('background').getSourceImage().height;
+        this.background.tileScaleY = this.background.tileScaleX;
+
+        // Reposicionar textos y contenedores
+        if (this.scoreText) this.scoreText.setX(width / 2);
+        if (this.gameOverContainer) this.gameOverContainer.setPosition(width / 2, height / 2);
     }
 
     update() {
@@ -202,12 +233,13 @@ class MainScene extends Phaser.Scene {
         this.background.tilePositionX += 0.5 / 0.75;
         if (this.bird.body.velocity.y < 0) { this.bird.angle = Phaser.Math.Clamp(this.bird.angle - 5, -30, 90); } else if (this.bird.angle < 90) { this.bird.angle += 2.5; }
         if (this.isCameraFollowActive) {
-            const zoom = this.cameras.main.zoom; const cameraViewHeight = this.game.config.height / zoom;
-            const targetScrollY = this.bird.y - (cameraViewHeight / 2); const maxScrollY = this.game.config.height - cameraViewHeight;
+            // AHORA: Usa el alto de la cámara para el cálculo
+            const zoom = this.cameras.main.zoom; const cameraViewHeight = this.cameras.main.height / zoom;
+            const targetScrollY = this.bird.y - (cameraViewHeight / 2); const maxScrollY = this.cameras.main.height - cameraViewHeight;
             const clampedY = Phaser.Math.Clamp(targetScrollY, 0, maxScrollY);
             this.cameras.main.scrollY = Phaser.Math.Linear(this.cameras.main.scrollY, clampedY, 0.1);
         }
-        this.fireballs.getChildren().forEach(fireball => { const leftBound = this.cameras.main.scrollX - 100; const rightBound = this.cameras.main.scrollX + this.game.config.width + 100; if (fireball.x < leftBound || fireball.x > rightBound) { fireball.destroy(); } });
+        this.fireballs.getChildren().forEach(fireball => { const leftBound = this.cameras.main.scrollX - 100; const rightBound = this.cameras.main.scrollX + this.cameras.main.width + 100; if (fireball.x < leftBound || fireball.x > rightBound) { fireball.destroy(); } });
         const cameraRotation = this.cameras.main.rotation; this.scoreText.rotation = -cameraRotation; this.gameOverContainer.rotation = -cameraRotation;
     }
 
@@ -222,12 +254,15 @@ class MainScene extends Phaser.Scene {
     }
 
     addPipeRow() {
-        const pipeWidth = 90; const spawnX = this.game.config.width + this.cameras.main.scrollX;
+        // AHORA: Usa el ancho y alto de la cámara
+        const { width, height } = this.cameras.main;
+        const pipeWidth = 90; const spawnX = width + this.cameras.main.scrollX;
         let isMover = this.score >= 10 ? Phaser.Math.Between(0, 1) === 1 : false; let gap = this.currentPipeGap;
         const safeAreaMargin = 80;
-        const pipeY = Phaser.Math.Between(safeAreaMargin + (gap / 2), this.game.config.height - safeAreaMargin - (gap / 2));
+        const pipeY = Phaser.Math.Between(safeAreaMargin + (gap / 2), height - safeAreaMargin - (gap / 2));
         this.createPipePair(spawnX, pipeY, gap, pipeWidth, isMover, 0);
-        const scoreZone = this.add.zone(spawnX + (pipeWidth / 2), 0, 5, this.game.config.height).setOrigin(0, 0);
+        // AHORA: Usa el alto de la cámara para la zona de puntuación
+        const scoreZone = this.add.zone(spawnX + (pipeWidth / 2), 0, 5, height).setOrigin(0, 0);
         this.physics.world.enable(scoreZone); scoreZone.body.setAllowGravity(false).setVelocityX(this.currentPipeSpeed);
         this.physics.add.overlap(this.bird, scoreZone, () => { scoreZone.destroy(); this.score++; this.scoreText.setText(this.score); this.updateScoreAndDifficulty(); });
     }
@@ -241,7 +276,8 @@ class MainScene extends Phaser.Scene {
         const verticalPipeBuffer = 300; 
         const setupPart = (part, isBody, isUpper) => {
             part.setImmovable(true).body.setAllowGravity(false).setVelocityX(this.currentPipeSpeed);
-            if (isBody) { let height = isUpper ? part.y : this.game.config.height - part.y; part.setDisplaySize(bodyWidth, height + verticalPipeBuffer); } else { part.setDisplaySize(width, capHeight); }
+            // AHORA: Usa el alto de la cámara para el tamaño del cuerpo de la tubería
+            if (isBody) { let height = isUpper ? part.y : this.cameras.main.height - part.y; part.setDisplaySize(bodyWidth, height + verticalPipeBuffer); } else { part.setDisplaySize(width, capHeight); }
             if (isUpper) { part.setFlipY(true); }
         };
         setupPart(upperBody, true, true); setupPart(upperCap, false, true); setupPart(lowerBody, true, false); setupPart(lowerCap, false, false);
@@ -250,8 +286,9 @@ class MainScene extends Phaser.Scene {
                 targets: [upperBody, upperCap, lowerBody, lowerCap], y: Phaser.Math.RND.pick([`+=${this.PIPE_VERTICAL_MOVEMENT}`, `-=${this.PIPE_VERTICAL_MOVEMENT}`]),
                 duration: this.currentTweenDuration, ease: 'Sine.easeInOut', yoyo: true, repeat: -1,
                 onUpdate: () => {
+                    // AHORA: Usa el alto de la cámara para recalcular el tamaño del cuerpo
                     const newUpperY = upperCap.y - capHeight; upperBody.y = newUpperY; upperBody.setDisplaySize(bodyWidth, newUpperY + verticalPipeBuffer);
-                    const newLowerY = lowerCap.y + capHeight; lowerBody.y = newLowerY; lowerBody.setDisplaySize(bodyWidth, this.game.config.height - newLowerY + verticalPipeBuffer);
+                    const newLowerY = lowerCap.y + capHeight; lowerBody.y = newLowerY; lowerBody.setDisplaySize(bodyWidth, this.cameras.main.height - newLowerY + verticalPipeBuffer);
                 }
             });
         }
@@ -274,15 +311,18 @@ class MainScene extends Phaser.Scene {
         this.isProjectileEventActive = true; this.pipeTimer.paused = true; this.projectileEventCount++;
         this.isCameraFollowActive = false;
         this.tweens.add({ targets: this.cameras.main, zoom: 1, scrollY: 0, duration: 500, ease: 'Sine.easeInOut' });
-        this.tweens.add({ targets: this.cameras.main, scrollX: this.bird.x - this.game.config.width / 2, duration: 800, ease: 'Power2' });
+        // AHORA: Usa el ancho de la cámara para el centrado
+        this.tweens.add({ targets: this.cameras.main, scrollX: this.bird.x - this.cameras.main.width / 2, duration: 800, ease: 'Power2' });
         const startTheFireballs = () => {
             const eventDuration = 10000; const fireballInterval = 550; const fireballSpeed = 320;
             const launchFireball = () => {
                 if (this.gameOver) return; const verticalSpread = 100; const birdY = this.bird.y;
                 const createFireball = (fromLeft, forcedY) => {
                     let spawnY = forcedY !== undefined ? forcedY : Phaser.Math.Between(birdY - verticalSpread, birdY + verticalSpread);
-                    spawnY = Phaser.Math.Clamp(spawnY, 50, this.game.config.height - 50);
-                    const spawnX = fromLeft ? this.cameras.main.scrollX - 50 : this.cameras.main.scrollX + this.game.config.width + 50;
+                    // AHORA: Usa el alto de la cámara para los límites verticales
+                    spawnY = Phaser.Math.Clamp(spawnY, 50, this.cameras.main.height - 50);
+                    // AHORA: Usa el ancho de la cámara para la posición de spawn horizontal
+                    const spawnX = fromLeft ? this.cameras.main.scrollX - 50 : this.cameras.main.scrollX + this.cameras.main.width + 50;
                     const velocityX = fromLeft ? fireballSpeed : -fireballSpeed; const fireball = this.fireballs.create(spawnX, spawnY, 'fireball_projectile');
                     fireball.body.setAllowGravity(false); fireball.setVelocityX(velocityX); fireball.setDisplaySize(80, 80);
                     fireball.body.setCircle(22); fireball.anims.play('burn', true); fireball.setFlipX(!fromLeft);
@@ -315,10 +355,13 @@ class MainScene extends Phaser.Scene {
         this.pipeTimer.paused = true;
         const startTheWall = () => {
             const wallPipeCount = 15; const pipeWidth = 90; const gap = 140;
-            const centerY = this.game.config.height / 2; const direction = Phaser.Math.RND.pick([-1, 1]);
+            // AHORA: Usa el alto de la cámara para el centro del muro
+            const centerY = this.cameras.main.height / 2; const direction = Phaser.Math.RND.pick([-1, 1]);
             for (let i = 0; i < wallPipeCount; i++) {
                 this.time.delayedCall(i * 150, () => {
-                    if (this.gameOver) return; const spawnX = this.game.config.width + this.cameras.main.scrollX;
+                    if (this.gameOver) return; 
+                    // AHORA: Usa el ancho de la cámara para la posición de spawn
+                    const spawnX = this.cameras.main.width + this.cameras.main.scrollX;
                     const progress = i / (wallPipeCount - 1); const easedValue = Phaser.Math.Easing.Sine.InOut(progress);
                     const offset = (-this.currentWallAmplitude + (easedValue * this.currentWallAmplitude * 2)) * direction;
                     this.createPipePair(spawnX, centerY + offset, gap, pipeWidth, false, 0);
@@ -326,7 +369,8 @@ class MainScene extends Phaser.Scene {
             }
             this.time.delayedCall(wallPipeCount * 150 + 1000, () => {
                 if (this.gameOver) return; this.currentWallAmplitude = Math.min(this.MAX_WALL_AMPLITUDE, this.currentWallAmplitude + this.WALL_AMPLITUDE_INCREMENT);
-                const scoreZone = this.add.zone(this.game.config.width + this.cameras.main.scrollX + 200, 0, 5, this.game.config.height).setOrigin(0, 0);
+                // AHORA: Usa el ancho y alto de la cámara para la zona de puntuación
+                const scoreZone = this.add.zone(this.cameras.main.width + this.cameras.main.scrollX + 200, 0, 5, this.cameras.main.height).setOrigin(0, 0);
                 this.physics.world.enable(scoreZone); scoreZone.body.setAllowGravity(false).setVelocityX(this.currentPipeSpeed);
                 this.physics.add.overlap(this.bird, scoreZone, () => {
                     scoreZone.destroy(); this.score += 1; this.scoreText.setText(this.score);
@@ -343,34 +387,28 @@ class MainScene extends Phaser.Scene {
     hitPipe() {
         if (this.gameOver) return; 
         this.gameOver = true;
-        
-        // CORRECCIÓN CLAVE: Detener todos los eventos de tiempo (temporizadores) de la escena.
-        // Esto previene que callbacks de eventos (como las bolas de fuego) se ejecuten después de morir,
-        // lo cual causaba el error en el botón de reinicio.
         this.time.removeAllEvents();
-        
         this.bird.setVisible(false);
         const deathSprite = this.add.sprite(this.bird.x, this.bird.y, 'death_effect'); 
         deathSprite.setDisplaySize(60, 59); 
         deathSprite.play('puff');
         deathSprite.on('animationcomplete', () => { deathSprite.destroy(); }); 
         this.bird.anims.stop();
-        
         if (!this.isImmortal) { 
             const scores = JSON.parse(localStorage.getItem('myGameScores')) || []; 
             scores.push(this.score); 
             localStorage.setItem('myGameScores', JSON.stringify(scores));
         }
-        
         this.physics.pause(); 
         this.tweens.pauseAll();
-        
         this.cameras.main.flash(250, 255, 255, 255); 
         this.showGameOverScreen();
     }
     
     createGameOverScreen() {
-        const container = this.add.container(this.game.config.width / 2, this.game.config.height / 2).setAlpha(0).setDepth(100);
+        // AHORA: Se posiciona dinámicamente usando la función resizeAllElements
+        const { width, height } = this.cameras.main;
+        const container = this.add.container(width / 2, height / 2).setAlpha(0).setDepth(100);
         const gameOverImage = this.add.image(0, -60, 'game-over-img').setOrigin(0.5);
         const scoreBoard = this.add.text(0, 20, '', { fontSize: '28px', fill: '#fff', stroke: '#000', strokeThickness: 4 }).setOrigin(0.5);
         const restartButton = this.add.sprite(0, 90, 'restart-button').setOrigin(0.5);
@@ -391,7 +429,6 @@ class MainScene extends Phaser.Scene {
 
     showGameOverScreen() {
         const scoreBoard = this.gameOverContainer.getAt(1); scoreBoard.setText(`Puntuación: ${this.score}`);
-        // CORREGIDO: Usar this.add.tween en lugar de this.time.delayedCall para evitar problemas de pausa.
         this.add.tween({ targets: this.gameOverContainer, alpha: 1, duration: 300, ease: 'Power2' });
     }
 }
@@ -400,10 +437,12 @@ const config = {
     type: Phaser.AUTO,
     parent: 'phaser-container',
     scale: {
-        mode: Phaser.Scale.FIT,
+        // CORRECCIÓN CLAVE: Cambiado a RESIZE para adaptabilidad total
+        mode: Phaser.Scale.RESIZE,
         autoCenter: Phaser.Scale.CENTER_BOTH,
+        // El ancho y alto ahora son manejados dinámicamente por RESIZE
         width: 400,
-        height: 600
+        height: 600,
     },
     physics: {
         default: 'arcade',
