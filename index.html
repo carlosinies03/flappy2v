@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DAMNBRUH - Apuestas Basadas en Habilidad</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body>
+
+    <!-- ============================================= -->
+    <!--          VISTA DEL LOBBY (VISIBLE)            -->
+    <!-- ============================================= -->
+    <div id="lobby-view">
+        <header class="top-bar">
+            <div class="welcome-msg">¡Bienvenido, <span id="username-display">Carlossww</span>!</div>
+            <div class="user-actions">
+                <i class="fa-solid fa-volume-high"></i>
+                <i class="fa-solid fa-user"></i>
+                <i class="fa-solid fa-gear"></i>
+                <button class="btn btn-logout">Cerrar sesión</button>
+            </div>
+        </header>
+
+        <div class="logo-container">
+            <h1>SUPER FLAPY</h1>
+            <p>GANA JUGANDO</p>
+        </div>
+
+        <main class="main-container">
+            <!-- COLUMNA IZQUIERDA -->
+            <div class="column left-column">
+                <div class="panel">
+                    <div class="panel-header"><span><i class="fa-solid fa-trophy"></i> Tabla de clasificación</span><span class="status-live">● En vivo</span></div>
+                    <ul class="leaderboard-list">
+                        <li><span>1. aj</span> <span class="score">$1,687.65</span></li>
+                        <li><span>2. Accelio</span> <span class="score">$1,461.15</span></li>
+                        <li><span>3. 1dollar</span> <span class="score">$1,290.88</span></li>
+                    </ul>
+                    <button class="btn btn-full-width btn-outline">Ver la clasificación completa</button>
+                </div>
+            </div>
+
+            <!-- COLUMNA CENTRAL -->
+            <div class="column center-column">
+                <div class="panel">
+                    <div class="panel-header user-panel">
+                        <div class="user-info">
+                            <span class="user-level">0</span>
+                            <!-- MODIFICADO: Contenedor para el nombre de usuario y el campo de edición -->
+                            <div class="username-container">
+                                <span id="username-text">Carlossww</span>
+                                <input type="text" id="username-input" class="hidden">
+                            </div>
+                        </div>
+                        <i id="edit-username-btn" class="fa-solid fa-pen-to-square icon-button"></i>
+                    </div>
+                     <!-- Botones para ir al juego -->
+                    <button id="play-button" class="btn btn-primary btn-play"><i class="fa-solid fa-play"></i> JUGAR GRATIS</button>
+                    <button class="btn btn-primary btn-play"><i class="fa-solid fa-play"></i> JUGAR</button>
+                </div>
+                <div class="stats-container">
+                    <div class="stat-item">
+                        <div class="stat-number">9</div>
+                        <div class="stat-label">Jugadores en el juego</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">$154,937</div>
+                        <div class="stat-label">Ganancias de los jugadores</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLUMNA DERECHA -->
+            <div class="column right-column">
+                <div class="panel panel-wallet">
+                    <div class="panel-header"><span><i class="fa-solid fa-wallet"></i> Billetera</span></div>
+                    <div class="wallet-balance">$0.00</div>
+                    <p class="wallet-sub-balance">0.0000 SOL</p>
+                    <div class="wallet-actions">
+                        <button class="btn btn-outline-green">Añadir fondos</button>
+                        <button class="btn btn-outline-blue">Retirar</button>
+                    </div>
+                </div>
+                <div class="panel panel-customize">
+                    <div class="panel-header"><span><i class="fa-solid fa-shirt"></i> Personalizar</span></div>
+                    <div class="customize-preview">
+                        <div id="bird-preview"></div>
+                    </div>
+                    <button class="btn btn-full-width btn-outline">Cambiar apariencia</button>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <button id="discord-button" class="btn btn-discord"><i class="fa-brands fa-discord"></i> ¡Únete a Discord!</button>
+
+    <!-- ============================================= -->
+    <!--            VISTA DEL Juego (OCULTA)           -->
+    <!-- ============================================= -->
+    <div id="game-view">
+        <!-- El Juego Phaser se creará aquí automáticamente -->
+        <div id="phaser-container"></div>
+        
+        <!-- AÑADIDO: Botones de pantalla completa -->
+        <div class="fullscreen-controls">
+            <button id="enter-fullscreen" class="btn"><i class="fa-solid fa-expand"></i></button>
+            <button id="exit-fullscreen" class="btn" style="display: none;"><i class="fa-solid fa-compress"></i></button>
+        </div>
+
+        <button id="back-button" class="btn btn-outline">Volver al Inicio</button>
+    </div>
+
+    <!-- ============================================= -->
+    <!--         ENLACES A LOS ARCHIVOS JAVASCRIPT     -->
+    <!-- ============================================= -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
+    <script src="game.js"></script> 
+
+</body>
+</html>
