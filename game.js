@@ -1,3 +1,4 @@
+
 // =============================================
 //         CÓDIGO PARA CAMBIAR VISTAS
 // =============================================
@@ -49,11 +50,12 @@ backButton.addEventListener('click', () => {
     document.body.classList.remove('game-active');
     gameView.style.display = 'none';
     lobbyView.style.display = 'block';
-    // Opcional: Destruir el juego para liberar memoria si no se va a volver a jugar pronto
-    // if (phaserGame) {
-    //     phaserGame.destroy(true);
-    //     phaserGame = null;
-    // }
+    
+    // >>>>>>>>>> CAMBIO REALIZADO AQUÍ <<<<<<<<<<
+    // Detenemos la escena del juego para parar la música y los procesos.
+    if (phaserGame) {
+        phaserGame.scene.stop('mainScene');
+    }
 });
 
 // =============================================
@@ -134,6 +136,10 @@ class MainScene extends Phaser.Scene {
         this.load.spritesheet('fireball_projectile', 'assets/fireball_projectile_anim.png', { frameWidth: 64, frameHeight: 64 });
         this.load.spritesheet('death_effect', 'assets/death_effect_anim.png', { frameWidth: 64, frameHeight: 64 });
         this.load.audio('flap_sfx', 'assets/sounds/flap_sound.ogg');
+
+        // >>>>>>>>>> CAMBIO REALIZADO AQUÍ <<<<<<<<<<
+        // Se carga la música de fondo.
+        this.load.audio('background_music', 'assets/musica-fondo.OGG');
     }
 
     create() {
@@ -168,6 +174,12 @@ class MainScene extends Phaser.Scene {
         this.pipes = this.physics.add.group();
         this.fireballs = this.physics.add.group();
         this.bird = this.physics.add.sprite(100, 300, 'bird');
+        
+        // >>>>>>>>>> CAMBIO REALIZADO AQUÍ <<<<<<<<<<
+        // Se añade y reproduce la música de fondo en bucle.
+        if (!this.sound.get('background_music') || !this.sound.get('background_music').isPlaying) {
+            this.sound.play('background_music', { loop: true, volume: 0.4 });
+        }
         
         this.anims.create({ key: 'flap', frames: this.anims.generateFrameNumbers('bird', { start: 0, end: 1 }), frameRate: 10, repeat: -1 });
         this.anims.create({ key: 'burn', frames: this.anims.generateFrameNumbers('fireball_projectile', { start: 0, end: 5 }), frameRate: 12, repeat: -1 });
