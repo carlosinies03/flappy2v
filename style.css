@@ -201,12 +201,20 @@ body::before {
     text-shadow: 2px 2px 8px #000;
     flex-shrink: 0;
 }
-.logo-container h1 {
-    font-size: 4rem;
-    margin: 0;
-    font-weight: bold;
-    letter-spacing: 2px;
+
+/* ============================================================================== */
+/* >>>>>>>>>> CAMBIO REALIZADO AQUÍ <<<<<<<<<< */
+
+/* Se eliminó la regla para ".logo-container h1" */
+
+/* Se añadió una nueva regla para la imagen del logo */
+#game-logo {
+    max-width: 450px; /* Puedes ajustar este valor para hacer el logo más grande o pequeño */
+    width: 80%;       /* Asegura que el logo se ajuste en pantallas pequeñas */
+    height: auto;     /* Mantiene la proporción de la imagen */
 }
+/* ============================================================================== */
+
 .logo-container p { 
     font-size: 1rem; 
     letter-spacing: 4px; 
@@ -310,10 +318,9 @@ body::before {
     .logo-container {
         margin: 1rem 0;
     }
-    .logo-container h1 {
-        font-size: 2.5rem;
-    }
 
+    /* --- CAMBIO AQUÍ --- Se eliminó la regla para .logo-container h1 */
+    
     .main-container {
         grid-template-columns: 1fr; /* Apila las columnas */
     }
