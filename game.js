@@ -124,7 +124,13 @@ class MainScene extends Phaser.Scene {
         this.load.image('pipe-cap', 'assets/tuberia-borde.png');
         this.load.image('game-over-img', 'assets/game-over.png');
         this.load.spritesheet('restart-button', 'assets/boton-restart-sheet.png', { frameWidth: 79, frameHeight: 30 });
-        this.load.spritesheet('bird', 'assets/pajaro-anim.png', { frameWidth: 2299, frameHeight: 1620 });
+        
+        // ==============================================================================
+        // >>>>>>>>>> CORRECCIÓN APLICADA AQUÍ <<<<<<<<<<
+        // Se cambiaron las dimensiones para que coincidan con la imagen optimizada.
+        this.load.spritesheet('bird', 'assets/pajaro-anim.png', { frameWidth: 90, frameHeight: 63 });
+        // ==============================================================================
+        
         this.load.spritesheet('fireball_projectile', 'assets/fireball_projectile_anim.png', { frameWidth: 64, frameHeight: 64 });
         this.load.spritesheet('death_effect', 'assets/death_effect_anim.png', { frameWidth: 64, frameHeight: 64 });
         this.load.audio('flap_sfx', 'assets/sounds/flap_sound.ogg');
@@ -167,7 +173,12 @@ class MainScene extends Phaser.Scene {
         this.anims.create({ key: 'burn', frames: this.anims.generateFrameNumbers('fireball_projectile', { start: 0, end: 5 }), frameRate: 12, repeat: -1 });
         this.anims.create({ key: 'puff', frames: this.anims.generateFrameNumbers('death_effect', { start: 0, end: 11 }), frameRate: 24, repeat: 0 });
         
-        this.bird.setFrame(0).setDisplaySize(60, 59).body.setSize(40, 30);
+        // ==============================================================================
+        // >>>>>>>>>> CORRECCIÓN APLICADA AQUÍ <<<<<<<<<<
+        // Ajustado el setDisplaySize a 60x42 para mantener la proporción (90/63).
+        this.bird.setFrame(0).setDisplaySize(60, 42).body.setSize(40, 30);
+        // ==============================================================================
+
         this.bird.setCollideWorldBounds(true).body.onWorldBounds = true;
         this.bird.body.setAllowGravity(false);
         
